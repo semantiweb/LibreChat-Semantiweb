@@ -816,9 +816,24 @@ export type TMemoryConfig = DeepPartial<z.infer<typeof memorySchema>>;
 
 const customEndpointsSchema = z.array(endpointSchema.partial()).optional();
 
+// Schema for custom agent categories configuration
+const agentCategorySchema = z.object({
+  value: z.string(),
+  label: z.string(),
+  description: z.string().optional(),
+  order: z.number().optional(),
+});
+
+const agentConfigSchema = z.object({
+  categories: z.array(agentCategorySchema).optional(),
+}).optional();
+
+export type TAgentConfig = z.infer<typeof agentConfigSchema>;
+
 export const configSchema = z.object({
   version: z.string(),
   cache: z.boolean().default(true),
+  agentConfig: agentConfigSchema,
   ocr: ocrSchema.optional(),
   webSearch: webSearchSchema.optional(),
   memory: memorySchema.optional(),

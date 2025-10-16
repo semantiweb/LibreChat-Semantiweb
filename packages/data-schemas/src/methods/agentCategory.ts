@@ -148,12 +148,22 @@ export function createAgentCategoryMethods(mongoose: typeof import('mongoose')) 
 
   /**
    * Ensure default categories exist and update them if they don't have localization keys
+   * @param customCategories - Optional custom categories from config (overrides defaults)
    * @returns Promise<boolean> - true if categories were created/updated, false if no changes
    */
-  async function ensureDefaultCategories(): Promise<boolean> {
+  async function ensureDefaultCategories(
+    customCategories?: Array<{
+      value: string;
+      label: string;
+      description?: string;
+      order?: number;
+    }>,
+  ): Promise<boolean> {
+    console.log('[DEBUG ensureDefaultCategories] Received:', JSON.stringify(customCategories, null, 2));
     const AgentCategory = mongoose.models.AgentCategory as Model<IAgentCategory>;
 
-    const defaultCategories = [
+    // Use custom categories if provided and not empty, otherwise use defaults
+    const defaultCategories = (customCategories && customCategories.length > 0) ? customCategories : [
       {
         value: 'general',
         label: 'com_agents_category_general',
@@ -198,7 +208,29 @@ export function createAgentCategoryMethods(mongoose: typeof import('mongoose')) 
       },
     ];
 
-    const existingCategories = await getAllCategories();
+    console.log('[DEBUG ensureDefaultCategories] Using categories:', JSON.stringify(defaultCategories, null, 2));
+    let existingCategories = await getAllCategories();
+    console.log('[DEBUG ensureDefaultCategories] Existing categories:', existingCategories.length);
+    console.log('[DEBUG ensureDefaultCategories] Existing list:', JSON.stringify(existingCategories, null, 2));
+    
+    // If custom categories are provided, delete non-custom categories that are not in the custom list
+    if (customCategories && customCategories.length > 0) {
+      const customCategoryValues = new Set(customCategories.map((cat) => cat.value));
+      const categoriesToDelete = existingCategories.filter(
+        (cat) => !cat.custom && !customCategoryValues.has(cat.value),
+      );
+      
+      if (categoriesToDelete.length > 0) {
+        console.log('[DEBUG ensureDefaultCategories] Deleting obsolete default categories:', categoriesToDelete.map(c => c.value));
+        for (const cat of categoriesToDelete) {
+          await deleteCategory(cat.value);
+        }
+        // Refresh the list after deletion
+        existingCategories = await getAllCategories();
+        console.log('[DEBUG ensureDefaultCategories] Remaining categories after deletion:', existingCategories.length);
+      }
+    }
+    
     const existingCategoryMap = new Map(existingCategories.map((cat) => [cat.value, cat]));
 
     const updates = [];
@@ -206,19 +238,24 @@ export function createAgentCategoryMethods(mongoose: typeof import('mongoose')) 
 
     for (const defaultCategory of defaultCategories) {
       const existingCategory = existingCategoryMap.get(defaultCategory.value);
+      console.log(`[DEBUG ensureDefaultCategories] Processing ${defaultCategory.value}, exists:`, !!existingCategory);
 
       if (existingCategory) {
         const isNotCustom = !existingCategory.custom;
-        const needsLocalization = !existingCategory.label.startsWith('com_');
+        const hasLocalizationKey = existingCategory.label.startsWith('com_');
+        const needsLocalization = !defaultCategory.label.startsWith('com_');
 
-        if (isNotCustom && needsLocalization) {
+        // Only update if the existing category has a localization key and needs updating
+        if (isNotCustom && hasLocalizationKey && needsLocalization) {
           updates.push({
             value: defaultCategory.value,
             label: defaultCategory.label,
             description: defaultCategory.description,
           });
         }
+        // If existing category doesn't have localization key, it's already correct - skip
       } else {
+        console.log(`[DEBUG ensureDefaultCategories] Creating category:`, defaultCategory.value);
         await createCategory({
           ...defaultCategory,
           isActive: true,
@@ -228,6 +265,7 @@ export function createAgentCategoryMethods(mongoose: typeof import('mongoose')) 
       }
     }
 
+    console.log(`[DEBUG ensureDefaultCategories] Created: ${created}, Updates: ${updates.length}`);
     if (updates.length > 0) {
       const bulkOps = updates.map((update) => ({
         updateOne: {

@@ -24,10 +24,15 @@ const { getConvoTitle, getConvo, saveConvo, deleteConvos } = require('./Conversa
 const { getPreset, getPresets, savePreset, deletePresets } = require('./Preset');
 const { File } = require('~/db/models');
 
-const seedDatabase = async () => {
+const seedDatabase = async (categoriesFromConfig) => {
+  console.log('[DEBUG seedDatabase] Categories from config:', JSON.stringify(categoriesFromConfig, null, 2));
+  console.log('[DEBUG seedDatabase] Is array?', Array.isArray(categoriesFromConfig));
+  console.log('[DEBUG seedDatabase] Length:', categoriesFromConfig?.length);
   await methods.initializeRoles();
   await methods.seedDefaultRoles();
-  await methods.ensureDefaultCategories();
+  console.log('[DEBUG seedDatabase] Calling ensureDefaultCategories with:', JSON.stringify(categoriesFromConfig, null, 2));
+  await methods.ensureDefaultCategories(categoriesFromConfig);
+  console.log('[DEBUG seedDatabase] Done');
 };
 
 module.exports = {

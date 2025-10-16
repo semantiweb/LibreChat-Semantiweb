@@ -53,8 +53,9 @@ const startServer = async () => {
   app.disable('x-powered-by');
   app.set('trust proxy', trusted_proxy);
 
-  await seedDatabase();
+  // Load config early to seed categories from YAML if provided
   const appConfig = await getAppConfig();
+  await seedDatabase(appConfig?.config?.agentConfig?.categories);
   initializeFileStorage(appConfig);
   await performStartupChecks(appConfig);
   await updateInterfacePermissions(appConfig);
