@@ -10,6 +10,7 @@ import {
 } from '@librechat/client';
 import type { ImperativePanelHandle } from 'react-resizable-panels';
 import { useGetStartupConfig } from '~/data-provider';
+import { useAuthContext } from '~/hooks/AuthContext';
 import { normalizeLayout } from '~/utils';
 import SidePanel from './SidePanel';
 import store from '~/store';
@@ -36,6 +37,7 @@ const SidePanelGroup = memo(
     children,
   }: SidePanelProps) => {
     const { data: startupConfig } = useGetStartupConfig();
+    const { user } = useAuthContext();
     const interfaceConfig = useMemo(
       () => startupConfig?.interface ?? defaultInterface,
       [startupConfig],
@@ -49,6 +51,10 @@ const SidePanelGroup = memo(
 
     const isSmallScreen = useMediaQuery('(max-width: 767px)');
     const hideSidePanel = useRecoilValue(store.hideSidePanel);
+
+    // Haleon: Hide side panel for regular users, show only for admins
+    const isAdminUser = user?.role === 'ADMIN';
+    const shouldShowSidePanel = isAdminUser && interfaceConfig.sidePanel === true;
 
     const calculateLayout = useCallback(() => {
       if (artifacts == null) {
@@ -132,7 +138,7 @@ const SidePanelGroup = memo(
               </ResizablePanel>
             </>
           )}
-          {!hideSidePanel && interfaceConfig.sidePanel === true && (
+          {!hideSidePanel && shouldShowSidePanel && (
             <SidePanel
               panelRef={panelRef}
               minSize={minSize}
