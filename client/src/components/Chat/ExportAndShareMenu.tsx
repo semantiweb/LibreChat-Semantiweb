@@ -48,7 +48,7 @@ export default function ExportAndShareMenu({
       label: localize('com_ui_share'),
       onClick: shareHandler,
       icon: <Share2 className="icon-md mr-2 text-text-secondary" />,
-      show: isSharedButtonEnabled,
+      show: false, // Haleon: Sharing disabled for all users
       /** NOTE: THE FOLLOWING PROPS ARE REQUIRED FOR MENU ITEMS THAT OPEN DIALOGS */
       hideOnClick: false,
       ref: shareButtonRef,
