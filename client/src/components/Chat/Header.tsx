@@ -6,6 +6,7 @@ import type { ContextType } from '~/common';
 import ModelSelector from './Menus/Endpoints/ModelSelector';
 import { PresetsMenu, HeaderNewChat, OpenSidebar } from './Menus';
 import { useGetStartupConfig } from '~/data-provider';
+import { useAuthContext } from '~/hooks/AuthContext';
 import ExportAndShareMenu from './ExportAndShareMenu';
 import BookmarkMenu from './Menus/BookmarkMenu';
 import { TemporaryChat } from './TemporaryChat';
@@ -16,6 +17,7 @@ const defaultInterface = getConfigDefaults().interface;
 
 export default function Header() {
   const { data: startupConfig } = useGetStartupConfig();
+  const { user } = useAuthContext();
   const { navVisible, setNavVisible } = useOutletContext<ContextType>();
 
   const interfaceConfig = useMemo(
@@ -32,6 +34,10 @@ export default function Header() {
     permissionType: PermissionTypes.MULTI_CONVO,
     permission: Permissions.USE,
   });
+
+  // Haleon: Show model selector only for ADMIN users
+  const isAdminUser = user?.role === 'ADMIN';
+  const shouldShowModelSelector = isAdminUser || interfaceConfig.modelSelect !== false;
 
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
 
@@ -56,7 +62,7 @@ export default function Header() {
               !isSmallScreen ? 'transition-all duration-200 ease-in-out' : ''
             } ${!navVisible ? 'translate-x-0' : 'translate-x-[-100px]'}`}
           >
-            {interfaceConfig.modelSelect !== false && <ModelSelector startupConfig={startupConfig} />}
+            {shouldShowModelSelector && <ModelSelector startupConfig={startupConfig} />}
             {interfaceConfig.presets === true && interfaceConfig.modelSelect && <PresetsMenu />}
             {hasAccessToBookmarks === true && <BookmarkMenu />}
             {hasAccessToMultiConvo === true && <AddMultiConvo />}
