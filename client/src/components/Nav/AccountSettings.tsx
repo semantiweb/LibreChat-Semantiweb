@@ -20,6 +20,10 @@ function AccountSettings() {
   const [showSettings, setShowSettings] = useState(false);
   const [showFiles, setShowFiles] = useRecoilState(store.showFiles);
 
+  // Haleon: Hide advanced features (My Files, Help & FAQ, Settings) for regular users
+  const isAdminUser = user?.role === 'ADMIN';
+  const showAdvancedFeatures = isAdminUser;
+
   return (
     <Select.SelectProvider>
       <Select.Select
@@ -60,15 +64,17 @@ function AccountSettings() {
             <DropdownMenuSeparator />
           </>
         )}
-        <Select.SelectItem
-          value=""
-          onClick={() => setShowFiles(true)}
-          className="select-item text-sm"
-        >
-          <FileText className="icon-md" aria-hidden="true" />
-          {localize('com_nav_my_files')}
-        </Select.SelectItem>
-        {startupConfig?.helpAndFaqURL !== '/' && (
+        {showAdvancedFeatures && (
+          <Select.SelectItem
+            value=""
+            onClick={() => setShowFiles(true)}
+            className="select-item text-sm"
+          >
+            <FileText className="icon-md" aria-hidden="true" />
+            {localize('com_nav_my_files')}
+          </Select.SelectItem>
+        )}
+        {showAdvancedFeatures && startupConfig?.helpAndFaqURL !== '/' && (
           <Select.SelectItem
             value=""
             onClick={() => window.open(startupConfig?.helpAndFaqURL, '_blank')}
@@ -78,14 +84,16 @@ function AccountSettings() {
             {localize('com_nav_help_faq')}
           </Select.SelectItem>
         )}
-        <Select.SelectItem
-          value=""
-          onClick={() => setShowSettings(true)}
-          className="select-item text-sm"
-        >
-          <GearIcon className="icon-md" aria-hidden="true" />
-          {localize('com_nav_settings')}
-        </Select.SelectItem>
+        {showAdvancedFeatures && (
+          <Select.SelectItem
+            value=""
+            onClick={() => setShowSettings(true)}
+            className="select-item text-sm"
+          >
+            <GearIcon className="icon-md" aria-hidden="true" />
+            {localize('com_nav_settings')}
+          </Select.SelectItem>
+        )}
         <DropdownMenuSeparator />
         <Select.SelectItem
           aria-selected={true}
