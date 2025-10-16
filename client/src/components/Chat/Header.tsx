@@ -35,9 +35,9 @@ export default function Header() {
     permission: Permissions.USE,
   });
 
-  // Haleon: Show model selector only for ADMIN users
+  // Haleon: Show model selector for ADMIN users (always) or if explicitly enabled in config
   const isAdminUser = user?.role === 'ADMIN';
-  const shouldShowModelSelector = isAdminUser || interfaceConfig.modelSelect !== false;
+  const shouldShowModelSelector = isAdminUser;
 
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
 

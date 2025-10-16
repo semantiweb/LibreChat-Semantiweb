@@ -54,7 +54,7 @@ const SidePanelGroup = memo(
 
     // Haleon: Hide side panel for regular users, show only for admins
     const isAdminUser = user?.role === 'ADMIN';
-    const shouldShowSidePanel = isAdminUser && interfaceConfig.sidePanel === true;
+    const shouldShowSidePanel = isAdminUser;
 
     const calculateLayout = useCallback(() => {
       if (artifacts == null) {
