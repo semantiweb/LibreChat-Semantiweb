@@ -65,7 +65,7 @@ export default function Header() {
             {shouldShowModelSelector && <ModelSelector startupConfig={startupConfig} />}
             {interfaceConfig.presets === true && interfaceConfig.modelSelect && <PresetsMenu />}
             {hasAccessToBookmarks === true && <BookmarkMenu />}
-            {hasAccessToMultiConvo === true && <AddMultiConvo />}
+            {interfaceConfig.multiConvo === true && <AddMultiConvo />}
             {isSmallScreen && (
               <>
                 <ExportAndShareMenu
